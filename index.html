@@ -452,19 +452,46 @@
 
         // Atualizar seletor de mês
         function updateMonthSelector() {
-            const months = [...new Set(rides.map(r => r.date.slice(0, 7)))].sort().reverse();
             const selector = document.getElementById('monthSelector');
             
-            if (months.length === 0) {
-                months.push(new Date().toISOString().slice(0, 7));
+            // Pegar anos únicos dos registros ou usar ano atual
+            const years = [...new Set(rides.map(r => r.date.slice(0, 4)))];
+            if (years.length === 0) {
+                years.push(new Date().getFullYear().toString());
             }
             
-            selector.innerHTML = months.map(m => {
-                const date = new Date(m + '-01');
-                const monthName = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-                const capitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1);
-                return `<option value="${m}" ${m === selectedMonth ? 'selected' : ''}>${capitalized}</option>`;
-            }).join('');
+            // Adicionar ano anterior e próximo para facilitar
+            const currentYear = new Date().getFullYear();
+            if (!years.includes((currentYear - 1).toString())) {
+                years.push((currentYear - 1).toString());
+            }
+            if (!years.includes(currentYear.toString())) {
+                years.push(currentYear.toString());
+            }
+            if (!years.includes((currentYear + 1).toString())) {
+                years.push((currentYear + 1).toString());
+            }
+            
+            years.sort().reverse();
+            
+            // Nomes dos meses
+            const monthNames = [
+                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+            ];
+            
+            // Criar opções para cada ano e cada mês
+            let options = '';
+            years.forEach(year => {
+                for (let month = 1; month <= 12; month++) {
+                    const monthStr = month.toString().padStart(2, '0');
+                    const value = `${year}-${monthStr}`;
+                    const label = `${monthNames[month - 1]} de ${year}`;
+                    options += `<option value="${value}" ${value === selectedMonth ? 'selected' : ''}>${label}</option>`;
+                }
+            });
+            
+            selector.innerHTML = options;
         }
 
         // Atualizar mês
