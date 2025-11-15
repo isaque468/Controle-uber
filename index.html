@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle Uber - Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #94a3b8;
+        }
+        
+        .save-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #16a34a20;
+            padding: 8px 16px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #22c55e;
+        }
+        
+        .month-selector {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .month-selector select {
+            background: #334155;
+            color: white;
+            border: 1px solid #475569;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .stat-card.green {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        }
+        
+        .stat-card.blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+        
+        .stat-card.red {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .stat-card.purple {
+            background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-sub {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-card {
+            background: #1e293b;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .chart-card h3 {
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+        
+        .form-card {
+            background: #1e293b;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+        
+        .form-card h3 {
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .form-grid input, .form-grid button {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            font-size: 1rem;
+        }
+        
+        .form-grid input {
+            background: #334155;
+            color: white;
+        }
+        
+        .form-grid input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        .form-grid button {
+            background: #16a34a;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        .form-grid button:hover {
+            background: #15803d;
+        }
+        
+        .table-card {
+            background: #1e293b;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            overflow-x: auto;
+        }
+        
+        .table-card h3 {
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #334155;
+        }
+        
+        th {
+            font-weight: 600;
+            color: #94a3b8;
+        }
+        
+        .text-green {
+            color: #22c55e;
+        }
+        
+        .text-red {
+            color: #ef4444;
+        }
+        
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+        }
+        
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Controle Uber</h1>
+            <p>Dashboard completo dos seus ganhos e gastos</p>
+            <div class="save-indicator">
+                <span>💾</span>
+                <span>Dados salvos automaticamente no navegador</span>
+            </div>
+        </div>
+
+        <div class="month-selector">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 1.2rem;">📅</span>
+                <span style="font-weight: 600;">Visualizar mês:</span>
+                <select id="monthSelector" onchange="updateMonth()"></select>
+            </div>
+            <div id="daysWorked" style="color: #94a3b8;"></div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card green">
+                <div class="stat-label">Lucro Líquido</div>
+                <div class="stat-value" id="netProfit">R$ 0,00</div>
+                <div class="stat-sub" id="profitPerHour"></div>
+            </div>
+            <div class="stat-card blue">
+                <div class="stat-label">Ganhos Totais</div>
+                <div class="stat-value" id="totalEarnings">R$ 0,00</div>
+                <div class="stat-sub" id="totalDays"></div>
+            </div>
+            <div class="stat-card red">
+                <div class="stat-label">Gastos Totais</div>
+                <div class="stat-value" id="totalExpenses">R$ 0,00</div>
+                <div class="stat-sub" id="fuelExpense"></div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-label">Quilometragem</div>
+                <div class="stat-value" id="totalKm">0 km</div>
+                <div class="stat-sub" id="totalHours"></div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>📊 Evolução dos Ganhos</h3>
+                <canvas id="lineChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>🥧 Distribuição Financeira</h3>
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <h3>➕ Adicionar Novo Dia</h3>
+            <div class="form-grid">
+                <input type="date" id="inputDate">
+                <input type="time" id="inputStart" placeholder="Início">
+                <input type="time" id="inputEnd" placeholder="Fim">
+                <input type="number" step="0.01" id="inputEarnings" placeholder="Ganhos R$">
+                <input type="number" step="0.01" id="inputFuel" placeholder="Combustível R$">
+                <input type="number" step="0.1" id="inputKm" placeholder="KM rodados">
+                <button onclick="addRide()">+ Adicionar</button>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <h3>📋 Histórico do Mês</h3>
+            <div id="tableContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        let rides = [];
+        let selectedMonth = new Date().toISOString().slice(0, 7);
+        let lineChart, pieChart;
+
+        // Carregar dados do localStorage
+        function loadData() {
+            const saved = localStorage.getItem('uberRides');
+            if (saved) {
+                rides = JSON.parse(saved);
+            }
+            updateMonthSelector();
+            updateDashboard();
+        }
+
+        // Salvar dados no localStorage
+        function saveData() {
+            localStorage.setItem('uberRides', JSON.stringify(rides));
+        }
+
+        // Adicionar corrida
+        function addRide() {
+            const date = document.getElementById('inputDate').value;
+            const start = document.getElementById('inputStart').value;
+            const end = document.getElementById('inputEnd').value;
+            const earnings = parseFloat(document.getElementById('inputEarnings').value) || 0;
+            const fuel = parseFloat(document.getElementById('inputFuel').value) || 0;
+            const km = parseFloat(document.getElementById('inputKm').value) || 0;
+
+            if (!date || !start || !end || !earnings) {
+                alert('Preencha pelo menos data, horários e ganhos!');
+                return;
+            }
+
+            rides.push({
+                id: Date.now(),
+                date,
+                startTime: start,
+                endTime: end,
+                earnings,
+                fuel,
+                km,
+                otherExpenses: 0
+            });
+
+            saveData();
+            
+            // Limpar formulário
+            document.getElementById('inputStart').value = '';
+            document.getElementById('inputEnd').value = '';
+            document.getElementById('inputEarnings').value = '';
+            document.getElementById('inputFuel').value = '';
+            document.getElementById('inputKm').value = '';
+
+            updateMonthSelector();
+            updateDashboard();
+        }
+
+        // Deletar corrida
+        function deleteRide(id) {
+            if (confirm('Tem certeza que deseja excluir este registro?')) {
+                rides = rides.filter(r => r.id !== id);
+                saveData();
+                updateDashboard();
+            }
+        }
+
+        // Calcular horas trabalhadas
+        function calculateHours(start, end) {
+            const [sh, sm] = start.split(':').map(Number);
+            const [eh, em] = end.split(':').map(Number);
+            let startMin = sh * 60 + sm;
+            let endMin = eh * 60 + em;
+            let diff = endMin - startMin;
+            if (diff < 0) diff += 24 * 60;
+            return (diff / 60).toFixed(1);
+        }
+
+        // Atualizar seletor de mês
+        function updateMonthSelector() {
+            const months = [...new Set(rides.map(r => r.date.slice(0, 7)))].sort().reverse();
+            const selector = document.getElementById('monthSelector');
+            
+            if (months.length === 0) {
+                months.push(new Date().toISOString().slice(0, 7));
+            }
+            
+            selector.innerHTML = months.map(m => {
+                const date = new Date(m + '-01');
+                const monthName = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+                return `<option value="${m}" ${m === selectedMonth ? 'selected' : ''}>${monthName}</option>`;
+            }).join('');
+        }
+
+        // Atualizar mês selecionado
+        function updateMonth() {
+            selectedMonth = document.getElementById('monthSelector').value;
+            updateDashboard();
+        }
+
+        // Atualizar dashboard
+        function updateDashboard() {
+            const filteredRides = rides.filter(r => r.date.startsWith(selectedMonth));
+            
+            // Calcular estatísticas
+            const stats = {
+                totalEarnings: filteredRides.reduce((sum, r) => sum + r.earnings, 0),
+                totalFuel: filteredRides.reduce((sum, r) => sum + r.fuel, 0),
+                totalOther: filteredRides.reduce((sum, r) => sum + r.otherExpenses, 0),
+                totalKm: filteredRides.reduce((sum, r) => sum + r.km, 0),
+                totalHours: filteredRides.reduce((sum, r) => sum + parseFloat(calculateHours(r.startTime, r.endTime)), 0)
+            };
+            
+            stats.totalExpenses = stats.totalFuel + stats.totalOther;
+            stats.netProfit = stats.totalEarnings - stats.totalExpenses;
+            stats.avgPerHour = stats.totalHours > 0 ? stats.netProfit / stats.totalHours : 0;
+
+            // Atualizar cards
+            document.getElementById('netProfit').textContent = `R$ ${stats.netProfit.toFixed(2)}`;
+            document.getElementById('profitPerHour').textContent = `R$ ${stats.avgPerHour.toFixed(2)}/hora`;
+            document.getElementById('totalEarnings').textContent = `R$ ${stats.totalEarnings.toFixed(2)}`;
+            document.getElementById('totalDays').textContent = `${filteredRides.length} dias trabalhados`;
+            document.getElementById('totalExpenses').textContent = `R$ ${stats.totalExpenses.toFixed(2)}`;
+            document.getElementById('fuelExpense').textContent = `Combustível: R$ ${stats.totalFuel.toFixed(2)}`;
+            document.getElementById('totalKm').textContent = `${stats.totalKm.toFixed(0)} km`;
+            document.getElementById('totalHours').textContent = `${stats.totalHours.toFixed(1)} horas trabalhadas`;
+            document.getElementById('daysWorked').textContent = `${filteredRides.length} dias trabalhados`;
+
+            // Atualizar gráficos
+            updateCharts(filteredRides, stats);
+            
+            // Atualizar tabela
+            updateTable(filteredRides);
+        }
+
+        // Atualizar gráficos
+        function updateCharts(filteredRides, stats) {
+            const chartData = filteredRides.map(r => ({
+                date: new Date(r.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+                lucro: r.earnings - r.fuel - r.otherExpenses,
+                ganhos: r.earnings,
+                gastos: r.fuel + r.otherExpenses
+            })).reverse();
+
+            // Gráfico de linha
+            if (lineChart) lineChart.destroy();
+            const lineCtx = document.getElementById('lineChart').getContext('2d');
+            lineChart = new Chart(lineCtx, {
+                type: 'line',
+                data: {
+                    labels: chartData.map(d => d.date),
+                    datasets: [
+                        {
+                            label: 'Ganhos',
+                            data: chartData.map(d => d.ganhos),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Gastos',
+                            data: chartData.map(d => d.gastos),
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Lucro',
+                            data: chartData.map(d => d.lucro),
+                            borderColor: '#22c55e',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            labels: { color: 'white' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: { color: 'white' },
+                            grid: { color: '#334155' }
+                        },
+                        x: {
+                            ticks: { color: 'white' },
+                            grid: { color: '#334155' }
+                        }
+                    }
+                }
+            });
+
+            // Gráfico de pizza
+            if (pieChart) pieChart.destroy();
+            const pieCtx = document.getElementById('pieChart').getContext('2d');
+            pieChart = new Chart(pieCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Combustível', 'Outros Gastos', 'Lucro Líquido'],
+                    datasets: [{
+                        data: [stats.totalFuel, stats.totalOther, stats.netProfit > 0 ? stats.netProfit : 0],
+                        backgroundColor: ['#ef4444', '#f97316', '#22c55e']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            labels: { color: 'white' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Atualizar tabela
+        function updateTable(filteredRides) {
+            const container = document.getElementById('tableContainer');
+            
+            if (filteredRides.length === 0) {
+                container.innerHTML = '<div class="empty-state">Nenhuma corrida registrada neste mês</div>';
+                return;
+            }
+
+            const tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Início</th>
+                            <th>Fim</th>
+                            <th>Horas</th>
+                            <th style="text-align: right;">Ganhos</th>
+                            <th style="text-align: right;">Combustível</th>
+                            <th style="text-align: right;">KM</th>
+                            <th style="text-align: right;">Lucro</th>
+                            <th style="text-align: center;">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filteredRides.map(ride => {
+                            const profit = ride.earnings - ride.fuel - ride.otherExpenses;
+                            const hours = calculateHours(ride.startTime, ride.endTime);
+                            return `
+                                <tr>
+                                    <td>${new Date(ride.date).toLocaleDateString('pt-BR')}</td>
+  
